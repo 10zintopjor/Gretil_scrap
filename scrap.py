@@ -1,3 +1,6 @@
+from cgitb import lookup
+from distutils.log import INFO
+import logging
 from bs4 import BeautifulSoup
 from openpecha.core.pecha import OpenPechaFS
 from openpecha.core.layer import InitialCreationEnum, Layer, LayerEnum,PechaMetaData
@@ -6,6 +9,8 @@ from openpecha import github_utils,config
 from pathlib import Path
 import requests
 import re
+import logging
+logging.basicConfig(filename='pecha_id_name_map.log',level=logging.INFO)
 
 
 start_url = 'http://gretil.sub.uni-goettingen.de/gretil.html'
@@ -109,6 +114,7 @@ def create_readme(opf_path,src_meta):
     readme = f"{pecha}\n{Table}\n{Title}\n{lang}"
     Path(readme_path).touch()
     Path(readme_path).write_text(readme)
+    logging.info(pecha_id+"  "+src_meta['title'])
 
 
 def publish_pecha(opf_path):

@@ -1,0 +1,5 @@
+INFO:charset_normalizer:Detected declarative mark in sequence. Priority +1 given for utf_8.
+INFO:charset_normalizer:utf_8 passed initial chaos probing. Mean measured chaos is 0.000000 %
+INFO:charset_normalizer:We detected language [('English', 1.0), ('Indonesian', 1.0), ('Dutch', 0.8029), ('Swedish', 0.7536), ('French', 0.7268), ('Hungarian', 0.7182), ('Estonian', 0.7096), ('Finnish', 0.7095), ('Spanish', 0.6827), ('German', 0.6827), ('Czech', 0.6827), ('Croatian', 0.6827), ('Turkish', 0.6741), ('Italian', 0.6741), ('Polish', 0.6741), ('Vietnamese', 0.6741), ('Slovak', 0.6645), ('Romanian', 0.6462), ('Portuguese', 0.5676)] using utf_8
+INFO:charset_normalizer:utf_8 is most likely the one. Stopping the process.
+INFO:root:P863C6D0D  Ṛgveda-Saṃhitā
