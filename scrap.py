@@ -37,8 +37,6 @@ def parse_links(outlines):
             link = li.find('a',text = 'TEI-conformant XML')
             if link:
                 parse_tei(link['href'])
-                print("DONE")
-                return
                 
 
 def parse_tei(link):
@@ -54,14 +52,24 @@ def parse_tei(link):
                 divs = divs[0].find_all('div',recursive=False)               
             for div in divs:
                 filename = title if div.find("head") == None else div.find("head").text
-                base_text.update({filename:div.get_text().replace(filename,'').strip("\n")})         
+                text = change_text_format(div.get_text().replace(filename,'').strip("\n"))
+                base_text.update({filename:text})         
         else:
-            base_text.update({title: body.get_text().strip("\n")})
+            text = change_text_format(body.get_text().strip("\n"))
+            base_text.update({title:text})
         #base_text=extract_text_attr(base_text[title])
-        opf_path,src_meta = create_opf(base_text,result)
+        meta,src_meta =get_metadata(result)
+        opf_path = create_opf(base_text,meta)
         opf_path = Path(opf_path)
         create_readme(opf_path,src_meta)
-        publish_pecha(opf_path.parent)
+        #publish_pecha(opf_path.parent)
+        print(src_meta['title'])
+
+
+def change_text_format(text):
+    re_pattern = "\n\n+"
+    new_text = re.sub(re_pattern,"\n\n",text)
+    return new_text
 
 
 def extract_text_attr(base_text):
@@ -69,15 +77,16 @@ def extract_text_attr(base_text):
     return text
 
 
-def create_opf(base_text,result):
-    opf_path=f"{config.PECHAS_PATH}/"
-    meta,src_meta =get_metadata(result)
+def create_opf(base_text,meta):
+    opf_path=f"opfs/"
+    
     opf = OpenPechaFS(
         meta=meta,
         base=base_text
         )
     opf_path = opf.save(output_path=opf_path)
-    return opf_path,src_meta
+
+    return opf_path
 
 
 def get_metadata(result):
@@ -95,12 +104,12 @@ def parse_src_meta(result):
     title_stmt = result.find('titleStmt')
     profileDesc = result.find('profileDesc')
     respStmt = title_stmt.find_all('respStmt')
-    for elem in respStmt:
-        src_meta.update({elem.find('resp').text:elem.find('name').text})
     languages = profileDesc.find_all('language')
     src_meta.update({'title':title_stmt.find("title").text})
     src_meta.update({'language':[x.text for x in languages]})
     src_meta.update({'term':profileDesc.find('term').text})
+    for elem in respStmt:
+        src_meta.update({elem.find('resp').text:elem.find('name').text})
     return src_meta
 
 
@@ -111,7 +120,8 @@ def create_readme(opf_path,src_meta):
     Table = "| --- | --- "
     Title = f"|Title | {src_meta['title']} "
     lang = f"|Language | {src_meta['language']}"
-    readme = f"{pecha}\n{Table}\n{Title}\n{lang}"
+    source = f"|Source | 'GRETIL'"
+    readme = f"{pecha}\n{Table}\n{Title}\n{lang}\n{source}"
     Path(readme_path).touch()
     Path(readme_path).write_text(readme)
     logging.info(pecha_id+"  "+src_meta['title'])
