@@ -10,7 +10,9 @@ from pathlib import Path
 import requests
 import re
 import logging
-logging.basicConfig(filename='pecha_id_name_map.log',level=logging.INFO)
+
+pechas_catalog = ''
+err_log = ''
 
 
 start_url = 'http://gretil.sub.uni-goettingen.de/gretil.html'
@@ -36,7 +38,10 @@ def parse_links(outlines):
         for li in lis:
             link = li.find('a',text = 'TEI-conformant XML')
             if link:
-                parse_tei(link['href'])
+                try:
+                    parse_tei(link['href'])
+                except:
+                    err_log.info(f"err {link['href']}")    
                 
 
 def parse_tei(link):
@@ -57,12 +62,12 @@ def parse_tei(link):
         else:
             text = change_text_format(body.get_text().strip("\n"))
             base_text.update({title:text})
-        #base_text=extract_text_attr(base_text[title])
         meta,src_meta =get_metadata(result)
         opf_path = create_opf(base_text,meta)
         opf_path = Path(opf_path)
         create_readme(opf_path,src_meta)
-        #publish_pecha(opf_path.parent)
+        publish_pecha(opf_path.parent)
+        pechas_catalog.info(f"{opf_path.stem},{src_meta['title']}")
         print(src_meta['title'])
 
 
@@ -70,11 +75,6 @@ def change_text_format(text):
     re_pattern = "\n\n+"
     new_text = re.sub(re_pattern,"\n\n",text)
     return new_text
-
-
-def extract_text_attr(base_text):
-    text = re.split("\d*",base_text)
-    return text
 
 
 def create_opf(base_text,meta):
@@ -124,7 +124,6 @@ def create_readme(opf_path,src_meta):
     readme = f"{pecha}\n{Table}\n{Title}\n{lang}\n{source}"
     Path(readme_path).touch()
     Path(readme_path).write_text(readme)
-    logging.info(pecha_id+"  "+src_meta['title'])
 
 
 def publish_pecha(opf_path):
@@ -135,6 +134,23 @@ def publish_pecha(opf_path):
     )
 
 
-if __name__ == '__main__':
+def set_up_logger(logger_name):
+    logger = logging.getLogger(logger_name)
+    formatter = logging.Formatter("%(message)s")
+    fileHandler = logging.FileHandler(f"{logger_name}.log")
+    fileHandler.setFormatter(formatter)
+    logger.setLevel(logging.INFO)
+    logger.addHandler(fileHandler)
+
+    return logger
+
+def main():
+    global pechas_catalog,err_log
+    pechas_catalog = set_up_logger("pechas_catalog")
+    err_log = set_up_logger('err')
     parse_page(start_url)
+
+
+if __name__ == '__main__':
+    main()
     #parse_tei('gretil/corpustei/sa_zaMkara-vivekacuDAmaNi.xml')
